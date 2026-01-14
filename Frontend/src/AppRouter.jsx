@@ -2,26 +2,24 @@ import {BrowserRouter,Routes, Route} from "react-router-dom"
 import { Dashboard } from "./pages/Dashboard"
 import { WeMeet } from "./pages/VideoCall"
 import { Signup } from "./pages/auth/SignUp"
-import { SignIn } from "./pages/auth/SignIn"
+import { Signin } from "./pages/auth/SignIn"
 import { ProtectedRoute } from "./pages/auth/ProtectedRoute"
 export function AppRouter(){
     
     return <BrowserRouter>
     <Routes>
-        {/* Auth */}
         <Route path="/signup" element={<Signup/>}/>
-        <Route path="/signin" element={<SignIn/>}/>
+        <Route path="/signin" element={<Signin/>}/>
 
-        {/* App */}
         <Route path="/dashboard" element={
-            // <ProtectedRoute>
+            <ProtectedRoute>
                 <Dashboard />
-            // </ProtectedRoute>
+            </ProtectedRoute>
             } />
         <Route path="/call/:roomId" element={
-            // <ProtectedRoute>
+            <ProtectedRoute>
                 <WeMeet />
-            // {/* </ProtectedRoute> */}
+            </ProtectedRoute>
             } />
 
         
