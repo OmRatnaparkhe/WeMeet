@@ -4,7 +4,7 @@
   "description": "",
   "main": "RTCPeerConnection.js",
   "scripts": {
-    "start": "concurrently \"nodemon server.js\" \"nodemon signalingServer.js\""
+    "start": "nodemon server.js"
   },
   "keywords": [],
   "author": "",

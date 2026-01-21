@@ -1,30 +1,27 @@
-import createDebug from "debug"
+import createDebug from "debug";
 import { WebSocketServer } from "ws";
+
 const debug = createDebug(`${process.env.APPNAME}:wss`);
 let channels = {};
+function init(server) {
+    debug("ws init invoked");
+    
+    const wss = new WebSocketServer({ server });
 
-function init(port) {
-    debug("ws init invoked : ", port);
-    const wss = new WebSocketServer({ port })
     wss.on("connection", (socket) => {
         debug("A client has connected");
-        socket.on('error', debug);
+        socket.on('error', console.error); 
         socket.on('message', (message) => onMessage(wss, socket, message));
-        socket.on('close', message => onClose(wss, socket, message));
+        socket.on('close', (message) => onClose(wss, socket, message));
     });
-
-};
-
-export default {
-    init
 }
+
 function send(wsClient, type, body) {
     debug('ws send', body);
-    wsClient.send(JSON.stringify({
-        type,
-        body
-    }))
-};
+    if (wsClient.readyState === 1) { 
+        wsClient.send(JSON.stringify({ type, body }));
+    }
+}
 
 function clearClient(wss, socket) {
     Object.keys(channels).forEach((cname) => {
@@ -32,86 +29,88 @@ function clearClient(wss, socket) {
             if (channels[cname][uid] === socket) {
                 delete channels[cname][uid];
             }
-        })
-    })
+        });
+        if (Object.keys(channels[cname]).length === 0) {
+            delete channels[cname];
+        }
+    });
 }
 
 function onMessage(wss, socket, message) {
-    const parsedMessage = JSON.parse(message);
-    const body = parsedMessage.body;
-    const type = parsedMessage.type;
-    const channelName = body.channelName;
-    const userId = body.userId;
+    try {
+        const parsedMessage = JSON.parse(message);
+        const body = parsedMessage.body || {};
+        const type = parsedMessage.type;
+        const channelName = body.channelName;
+        const userId = body.userId;
 
-    switch (type) {
-        case 'join': {
-            if (channels[channelName]) {
-                channels[channelName][userId] = socket;
-            }
-            else {
-                channels[channelName] = {};
-                channels[channelName][userId] = socket;
-            }
+        if (!channelName) return; 
 
-            const userIds = Object.keys(channels[channelName]);
-            userIds.forEach(id => {
-                const clientSocket = channels[channelName][id];
-                if(clientSocket.readyState === 1){
-                    send(clientSocket, "joined",userIds);
+        switch (type) {
+            case 'join': {
+                if (!channels[channelName]) {
+                    channels[channelName] = {};
                 }
-            })
-            break;
-        }
+                channels[channelName][userId] = socket;
 
-        case "quit": {
-            if (channels[channelName]) {
-                delete channels[channelName][userId]
                 const userIds = Object.keys(channels[channelName]);
-                if (userIds.length === 0) {
-                    delete channels[channelName]
-                }
+                userIds.forEach(id => {
+                    const clientSocket = channels[channelName][id];
+                    send(clientSocket, "joined", userIds);
+                });
+                break;
             }
-            break;
-        }
 
-        case "send_offer": {
-            const sdp = body.sdp;
-            let userIds = Object.keys(channels[channelName]);
-            userIds.forEach(id => {
-                if (userId.toString() !== id.toString()) {
-                    const wsClient = channels[channelName][id];
-                    send(wsClient, "offer_sdp_received", sdp);
+            case "quit": {
+                if (channels[channelName]) {
+                    delete channels[channelName][userId];
+                    const userIds = Object.keys(channels[channelName]);
+                    userIds.forEach(id => {
+                        const clientSocket = channels[channelName][id];
+                        send(clientSocket, "user_left", userId); 
+                    });
+                    if (userIds.length === 0) {
+                        delete channels[channelName];
+                    }
                 }
-            });
-            break;
-        }
+                break;
+            }
 
-        case "send_answer": {
-            const sdp = body.sdp
-            let userIds = Object.keys(channels[channelName]);
-            userIds.forEach(id => {
-                if (userId.toString() !== id.toString()) {
-                    const wsClient = channels[channelName][id];
-                    send(wsClient, "answer_sdp_received", sdp);
-                }
-            });
-            break;
-        }
+            case "send_offer": {
+                const sdp = body.sdp;
+                Object.keys(channels[channelName] || {}).forEach(id => {
+                    if (userId.toString() !== id.toString()) {
+                        send(channels[channelName][id], "offer_sdp_received", sdp);
+                    }
+                });
+                break;
+            }
 
-        case "send_ice_candidate": {
-            const candidate = body.candidate;
-            let userIds = Object.keys(channels[channelName]);
-            userIds.forEach(id => {
-                if (userId.toString() !== id.toString()) {
-                    const wsClient = channels[channelName][id];
-                    send(wsClient, "ice_candidate_received", candidate);
-                }
-            });
-            break;
+            case "send_answer": {
+                const sdp = body.sdp;
+                Object.keys(channels[channelName] || {}).forEach(id => {
+                    if (userId.toString() !== id.toString()) {
+                        send(channels[channelName][id], "answer_sdp_received", sdp);
+                    }
+                });
+                break;
+            }
+
+            case "send_ice_candidate": {
+                const candidate = body.candidate;
+                Object.keys(channels[channelName] || {}).forEach(id => {
+                    if (userId.toString() !== id.toString()) {
+                        send(channels[channelName][id], "ice_candidate_received", candidate);
+                    }
+                });
+                break;
+            }
+
+            default:
+                break;
         }
-        
-        default:
-            break;
+    } catch (err) {
+        debug("Error processing message:", err);
     }
 }
 
@@ -120,3 +119,4 @@ function onClose(wss, socket, message) {
     clearClient(wss, socket);
 }
 
+export default { init };
