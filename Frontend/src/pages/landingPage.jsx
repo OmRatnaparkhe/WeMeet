@@ -19,7 +19,7 @@ export function LandingPage() {
     if (isSignedIn) {
       navigate("/dashboard");
     } else {
-      navigate("/sign-up");
+      navigate("/signup");
     }
   };
 
@@ -68,14 +68,14 @@ function Navbar() {
         <div className="flex items-center gap-4">
           {!isSignedIn && (
             <button 
-              onClick={() => navigate("/sign-in")}
+              onClick={() => navigate("/signin")}
               className="text-sm font-medium text-white/70 hover:text-white transition"
             >
               Sign In
             </button>
           )}
           <button 
-            onClick={() => navigate(isSignedIn ? "/dashboard" : "/sign-up")}
+            onClick={() => navigate(isSignedIn ? "/dashboard" : "/signup")}
             className="bg-white text-black px-4 py-2 rounded-full text-sm font-bold hover:bg-neutral-200 transition"
           >
             {isSignedIn ? "Go to Studio" : "Get Started"}
