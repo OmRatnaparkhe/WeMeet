@@ -16,7 +16,7 @@ export function WeMeet() {
   const roomId = state.roomId || paramRoomId;
   const name = state.name || "Live Studio";
   
-  const BE_URL = import.meta.env.VITE_BE_API_BASE || "http://localhost:4000/api";
+  const BE_URL = import.meta.env.VITE_BE_API_PROD || "http://localhost:4000/api";
   
   const [recordingId, setRecordingId] = useState("");
   const [recordingStartedAt, setRecordingStartedAt] = useState(null);

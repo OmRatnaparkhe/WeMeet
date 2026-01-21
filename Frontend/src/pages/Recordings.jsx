@@ -9,7 +9,7 @@ export function Recordings() {
   const { user } = useUser();
   const [recordings, setRecordings] = useState([]);
   const [selectedVideo, setSelectedVideo] = useState(null); 
-  const BE_URL = import.meta.env.VITE_BE_API_BASE || "http://localhost:4000/api";
+  const BE_URL = import.meta.env.VITE_BE_API_PROD || "http://localhost:4000/api";
 
   const fetchRecordings = () => {
     if (!user) return;

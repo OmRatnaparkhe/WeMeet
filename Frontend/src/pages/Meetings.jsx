@@ -12,7 +12,7 @@ export function Meetings() {
     const [meetings, setMeetings] = useState([]);
     const { user } = useUser();
     const userId = user?.id;
-    const BE_URL = import.meta.env.VITE_BE_API_BASE || "http://localhost:4000/api";
+    const BE_URL = import.meta.env.VITE_BE_API_PROD || "http://localhost:4000/api";
 
     const fetchMeetings = useCallback(() => {
         if (!userId) return;

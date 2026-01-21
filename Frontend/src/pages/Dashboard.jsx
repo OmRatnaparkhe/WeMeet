@@ -16,7 +16,7 @@ export function Dashboard() {
   
   const [meetings, setMeetings] = useState([]);
   const [recordings, setRecordings] = useState([]);
-  const BE_URL = import.meta.env.VITE_BE_API_BASE || "http://localhost:4000/api";
+  const BE_URL = import.meta.env.VITE_BE_API_PROD || "http://localhost:4000/api";
 
   const refreshDashboard = () => {
     if (!user) return;

@@ -1,7 +1,7 @@
 import { useEffect, useRef, useCallback, useState } from "react";
 import setUpDevice from "./setUpDevice";
 
-const URL_WEB_SOCKET = "ws://localhost:8070";
+const URL_WEB_SOCKET = "wss://wemeet-onrq.onrender.com";
 
 export const useWebRTC = ({ userId, channelName, onChatReceived }) => {
     const [activeScreenStream, setActiveScreenStream] = useState(null);
@@ -10,7 +10,7 @@ export const useWebRTC = ({ userId, channelName, onChatReceived }) => {
     const recordedChunks = useRef([]);
     const streamReadyPromise = useRef(null);
     const datachannel = useRef(null);
-    const screenSender = useRef(null); // Track the specific sender for screen
+    const screenSender = useRef(null); 
     const micEnabled = useRef(true);
     const camEnabled = useRef(true);
     const localPeerConnection = useRef(null);
@@ -61,7 +61,6 @@ export const useWebRTC = ({ userId, channelName, onChatReceived }) => {
         datachannel.current.send(JSON.stringify({ from: userId, text }));
     }, [userId]);
 
-    // Helper to renegotiate connection (used when adding/removing tracks)
     const renegotiate = async () => {
         try {
             const offer = await localPeerConnection.current.createOffer();
@@ -78,7 +77,6 @@ export const useWebRTC = ({ userId, channelName, onChatReceived }) => {
 
         localPeerConnection.current = new RTCPeerConnection(servers);
         
-        // Data Channel setup...
         datachannel.current = localPeerConnection.current.createDataChannel("chat");
         datachannel.current.onmessage = (event) => onChatReceived?.(JSON.parse(event.data));
 
@@ -86,20 +84,17 @@ export const useWebRTC = ({ userId, channelName, onChatReceived }) => {
             localPeerConnection.current.addTrack(track, localStream.current);
         });
 
-        // ✅ UPDATED: Handle Remote Tracks
         localPeerConnection.current.ontrack = (event) => {
             const stream = event.streams[0];
             const track = event.track;
 
             if (track.kind === "video") {
                 const peerCam = document.getElementById("peerPlayer");
-                // If peerPlayer is empty, it's the Main Cam
                 if (!peerCam.srcObject || peerCam.srcObject.id === stream.id) {
                     peerCam.srcObject = stream;
                 } else {
-                    // Otherwise, it's the Screen Share!
                     console.log("Remote Screen Share Detected");
-                    setActiveScreenStream(stream); // ✅ Trigger React State
+                    setActiveScreenStream(stream); 
                 }
             } else if (track.kind === "audio") {
                 const peerCam = document.getElementById("peerPlayer");
@@ -107,23 +102,20 @@ export const useWebRTC = ({ userId, channelName, onChatReceived }) => {
             }
 
             track.onended = () => {
-                // If the track ending matches our active screen, clear it
                 if (activeScreenStream && activeScreenStream.id === stream.id) {
                     setActiveScreenStream(null);
                 }
             };
         };
 
-        // ICE Candidate handling...
         localPeerConnection.current.onicecandidate = (e) => {
             if (e.candidate) sendWsMessage("send_ice_candidate", { channelName, userId, candidate: e.candidate });
         };
 
-        // Initial Offer...
         const offer = await localPeerConnection.current.createOffer();
         await localPeerConnection.current.setLocalDescription(offer);
         sendWsMessage("send_offer", { channelName, userId, sdp: offer });
-    }, [channelName, userId, sendWsMessage, servers]); // Add activeScreenStream if needed in deps, but usually safe to omit
+    }, [channelName, userId, sendWsMessage, servers]); 
 
     const leaveCall = useCallback(() => {
         if (localStream.current) {
@@ -138,31 +130,26 @@ export const useWebRTC = ({ userId, channelName, onChatReceived }) => {
         window.location.reload(); 
     }, [channelName, userId, sendWsMessage]);
 
-    // ✅ UPDATED: Start Screen Share (Add Track + Renegotiate)
    const startScreenShare = async () => {
         try {
             const screenStream = await navigator.mediaDevices.getDisplayMedia({ video: true, audio: false });
             const screenTrack = screenStream.getVideoTracks()[0];
 
-            // 1. Show Local Preview immediately via State
-            setActiveScreenStream(screenStream); // ✅ React will now re-render and show the video
+            setActiveScreenStream(screenStream); 
 
-            // 2. Add track to PeerConnection (Send to remote)
             if (localPeerConnection.current) {
                 if(screenSender.current) {
                     await screenSender.current.replaceTrack(screenTrack);
                 } else {
                     screenSender.current = localPeerConnection.current.addTrack(screenTrack, screenStream);
-                    // Negotiate
                     const offer = await localPeerConnection.current.createOffer();
                     await localPeerConnection.current.setLocalDescription(offer);
                     sendWsMessage("send_offer", { channelName, userId, sdp: offer });
                 }
             }
 
-            // 3. Handle Stop Sharing
             screenTrack.onended = async () => {
-                setActiveScreenStream(null); // ✅ Hide the video
+                setActiveScreenStream(null);
 
                 if (localPeerConnection.current && screenSender.current) {
                     localPeerConnection.current.removeTrack(screenSender.current);
@@ -225,7 +212,7 @@ export const useWebRTC = ({ userId, channelName, onChatReceived }) => {
                         localPeerConnection.current.close();
                         localPeerConnection.current = null;
                     }
-                    // Clear all videos
+                    
                     ["peerPlayer", "peerScreenPlayer"].forEach(id => {
                         const el = document.getElementById(id);
                         if(el) el.srcObject = null;
@@ -237,12 +224,8 @@ export const useWebRTC = ({ userId, channelName, onChatReceived }) => {
                     break;
                 }
                 case "offer_sdp_received": {
-                    // Reuse existing connection if possible (needed for renegotiation)
                     if (!localPeerConnection.current) {
-                        // ... (setup connection logic same as startCall - condensed here for brevity)
-                        // Note: In production, refactor connection setup to a shared function
                         localPeerConnection.current = new RTCPeerConnection(servers);
-                        // Re-attach listeners... (Duplicate logic from startCall needs to be here or shared)
                         localPeerConnection.current.ontrack = (event) => {
                             const stream = event.streams[0];
                             const track = event.track;
