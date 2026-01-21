@@ -1,1 +1,15 @@
 @import 'tailwindcss';
+video#peerScreenPlayer[style*="display: block"] ~ video#peerPlayer,
+video#peerScreenPlayer:not(.hidden) ~ video#peerPlayer {
+    position: absolute;
+    bottom: 20px;
+    right: 20px;
+    width: 200px;
+    height: 150px;
+    border-radius: 12px;
+    border: 1px solid rgba(255,255,255,0.2);
+    z-index: 40; /* Above the screen share */
+    object-fit: cover;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+    transition: all 0.3s ease;
+}

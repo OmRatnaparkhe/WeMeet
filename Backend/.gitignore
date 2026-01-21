@@ -1,2 +1,5 @@
 .env
 .package-lock.json
+/generated/prisma
+
+/lib/generated/prisma
