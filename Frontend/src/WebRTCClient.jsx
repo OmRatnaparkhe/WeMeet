@@ -1,7 +1,8 @@
 import { useEffect, useRef, useCallback, useState } from "react";
 import setUpDevice from "./setUpDevice";
 
-const URL_WEB_SOCKET = "wss://wemeet-onrq.onrender.com";
+// ✅ Make sure to use the WSS protocol for production
+const URL_WEB_SOCKET = import.meta.env.VITE_WS_URL || "wss://wemeet-onrq.onrender.com";
 
 export const useWebRTC = ({ userId, channelName, onChatReceived }) => {
     const [activeScreenStream, setActiveScreenStream] = useState(null);
@@ -23,17 +24,21 @@ export const useWebRTC = ({ userId, channelName, onChatReceived }) => {
     const toggleMic = useCallback(() => {
         if (!localStream.current) return;
         const audioTrack = localStream.current.getAudioTracks()[0];
-        micEnabled.current = !micEnabled.current;
-        audioTrack.enabled = micEnabled.current;
-        console.log("Mic enabled : ", micEnabled.current);
+        if (audioTrack) {
+            micEnabled.current = !micEnabled.current;
+            audioTrack.enabled = micEnabled.current;
+            console.log("Mic enabled : ", micEnabled.current);
+        }
     }, []);
 
     const toggleCam = useCallback(() => {
         if (!localStream.current) return;
         const camTrack = localStream.current.getVideoTracks()[0];
-        camEnabled.current = !camEnabled.current;
-        camTrack.enabled = camEnabled.current;
-        console.log("Cam enabled : ", camEnabled.current);
+        if (camTrack) {
+            camEnabled.current = !camEnabled.current;
+            camTrack.enabled = camEnabled.current;
+            console.log("Cam enabled : ", camEnabled.current);
+        }
     }, []);
 
     const sendWsMessage = useCallback((type, body) => {
@@ -44,6 +49,8 @@ export const useWebRTC = ({ userId, channelName, onChatReceived }) => {
 
     const joinChannel = useCallback(async () => {
         if (!userId || !channelName) return;
+        
+        // Initialize device immediately
         if (!localStream.current) {
             streamReadyPromise.current = setUpDevice().then(stream => {
                 localStream.current = stream;
@@ -61,18 +68,10 @@ export const useWebRTC = ({ userId, channelName, onChatReceived }) => {
         datachannel.current.send(JSON.stringify({ from: userId, text }));
     }, [userId]);
 
-    const renegotiate = async () => {
-        try {
-            const offer = await localPeerConnection.current.createOffer();
-            await localPeerConnection.current.setLocalDescription(offer);
-            sendWsMessage("send_offer", { channelName, userId, sdp: offer });
-        } catch (err) {
-            console.error("Renegotiation failed", err);
-        }
-    };
-
     const startCall = useCallback(async () => {
         if (localPeerConnection.current) return;
+        
+        // Wait for stream before starting
         if (!localStream.current) await streamReadyPromise.current;
 
         localPeerConnection.current = new RTCPeerConnection(servers);
@@ -80,17 +79,21 @@ export const useWebRTC = ({ userId, channelName, onChatReceived }) => {
         datachannel.current = localPeerConnection.current.createDataChannel("chat");
         datachannel.current.onmessage = (event) => onChatReceived?.(JSON.parse(event.data));
 
+        // Add Local Tracks to Connection
         localStream.current.getTracks().forEach((track) => {
             localPeerConnection.current.addTrack(track, localStream.current);
         });
 
+        // Handle Remote Tracks
         localPeerConnection.current.ontrack = (event) => {
             const stream = event.streams[0];
             const track = event.track;
 
             if (track.kind === "video") {
                 const peerCam = document.getElementById("peerPlayer");
-                if (!peerCam.srcObject || peerCam.srcObject.id === stream.id) {
+                // Check if it's the main camera or screen share
+                // (Simple logic: if peerPlayer is empty, take it. Else it's screen)
+                if (peerCam && (!peerCam.srcObject || peerCam.srcObject.id === stream.id)) {
                     peerCam.srcObject = stream;
                 } else {
                     console.log("Remote Screen Share Detected");
@@ -98,7 +101,7 @@ export const useWebRTC = ({ userId, channelName, onChatReceived }) => {
                 }
             } else if (track.kind === "audio") {
                 const peerCam = document.getElementById("peerPlayer");
-                if(peerCam) peerCam.srcObject = stream;
+                if(peerCam && !peerCam.srcObject) peerCam.srcObject = stream;
             }
 
             track.onended = () => {
@@ -130,7 +133,7 @@ export const useWebRTC = ({ userId, channelName, onChatReceived }) => {
         window.location.reload(); 
     }, [channelName, userId, sendWsMessage]);
 
-   const startScreenShare = async () => {
+    const startScreenShare = async () => {
         try {
             const screenStream = await navigator.mediaDevices.getDisplayMedia({ video: true, audio: false });
             const screenTrack = screenStream.getVideoTracks()[0];
@@ -142,6 +145,7 @@ export const useWebRTC = ({ userId, channelName, onChatReceived }) => {
                     await screenSender.current.replaceTrack(screenTrack);
                 } else {
                     screenSender.current = localPeerConnection.current.addTrack(screenTrack, screenStream);
+                    // Negotiate new track
                     const offer = await localPeerConnection.current.createOffer();
                     await localPeerConnection.current.setLocalDescription(offer);
                     sendWsMessage("send_offer", { channelName, userId, sdp: offer });
@@ -160,7 +164,6 @@ export const useWebRTC = ({ userId, channelName, onChatReceived }) => {
                     sendWsMessage("send_offer", { channelName, userId, sdp: offer });
                 }
             };
-
         } catch (err) {
             console.error("Screen share failed", err);
         }
@@ -202,6 +205,7 @@ export const useWebRTC = ({ userId, channelName, onChatReceived }) => {
             switch (parsedMessage.type) {
                 case "joined": {
                     const userIds = parsedMessage.body;
+                    // Auto-start call if we are the "first" user and there are 2 people
                     if (userIds.length === 2 && userId === userIds.sort()[0]) {
                         setTimeout(() => startCall(), 0);
                     }
@@ -212,7 +216,6 @@ export const useWebRTC = ({ userId, channelName, onChatReceived }) => {
                         localPeerConnection.current.close();
                         localPeerConnection.current = null;
                     }
-                    
                     ["peerPlayer", "peerScreenPlayer"].forEach(id => {
                         const el = document.getElementById(id);
                         if(el) el.srcObject = null;
@@ -226,30 +229,44 @@ export const useWebRTC = ({ userId, channelName, onChatReceived }) => {
                 case "offer_sdp_received": {
                     if (!localPeerConnection.current) {
                         localPeerConnection.current = new RTCPeerConnection(servers);
+                        
+                        // ✅ FIX 1: Wait for local stream if it's not ready yet
+                        if (!localStream.current && streamReadyPromise.current) {
+                            await streamReadyPromise.current;
+                        }
+
+                        // ✅ FIX 2: Add our tracks to the connection so the Caller sees us!
+                        if (localStream.current) {
+                            localStream.current.getTracks().forEach((track) => {
+                                localPeerConnection.current.addTrack(track, localStream.current);
+                            });
+                        }
+
+                        // Setup event listeners
                         localPeerConnection.current.ontrack = (event) => {
                             const stream = event.streams[0];
                             const track = event.track;
                             const peerCam = document.getElementById("peerPlayer");
-                            const peerScreen = document.getElementById("peerScreenPlayer");
                             
                             if (track.kind === "video") {
-                                if (!peerCam.srcObject || peerCam.srcObject.id === stream.id) {
+                                if (peerCam && (!peerCam.srcObject || peerCam.srcObject.id === stream.id)) {
                                     peerCam.srcObject = stream;
-                                } else if (peerScreen) {
-                                    peerScreen.srcObject = stream;
-                                    peerScreen.style.display = "block";
+                                } else {
+                                    setActiveScreenStream(stream);
                                 }
+                            } else if (track.kind === "audio") {
+                                if(peerCam && !peerCam.srcObject) peerCam.srcObject = stream;
                             }
-                            track.onended = () => {
-                                if (peerScreen && peerScreen.srcObject && peerScreen.srcObject.id === stream.id) {
-                                    peerScreen.srcObject = null;
-                                    peerScreen.style.display = "none";
-                                }
-                            };
                         };
+                        
                         localPeerConnection.current.onicecandidate = (e) => {
                             if (e.candidate) sendWsMessage("send_ice_candidate", { channelName, userId, candidate: e.candidate });
                         }
+                        
+                        localPeerConnection.current.ondatachannel = (event) => {
+                            datachannel.current = event.channel;
+                            datachannel.current.onmessage = (e) => onChatReceived?.(JSON.parse(e.data));
+                        };
                     }
 
                     await localPeerConnection.current.setRemoteDescription(parsedMessage.body);
@@ -259,7 +276,9 @@ export const useWebRTC = ({ userId, channelName, onChatReceived }) => {
                     break;
                 }
                 case "answer_sdp_received": {
-                    await localPeerConnection.current.setRemoteDescription(parsedMessage.body);
+                    if (localPeerConnection.current) {
+                        await localPeerConnection.current.setRemoteDescription(parsedMessage.body);
+                    }
                     break;
                 }
                 case "ice_candidate_received": {
@@ -273,5 +292,9 @@ export const useWebRTC = ({ userId, channelName, onChatReceived }) => {
         return () => wsClient.close();
     }, []);
 
-    return { joinChannel, sendChatMessage, startCall, leaveCall, toggleCam, toggleMic, startScreenShare, startRecording, stopRecording, activeScreenStream};
+    return { 
+        joinChannel, sendChatMessage, startCall, leaveCall, 
+        toggleCam, toggleMic, startScreenShare, startRecording, stopRecording, 
+        activeScreenStream
+    };
 };
