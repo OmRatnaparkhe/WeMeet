@@ -1,14 +1,14 @@
 import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { useUser } from "@clerk/clerk-react";
-import { 
-  Video, 
-  Mic, 
-  Share2, 
-  Shield, 
-  Zap, 
-  Globe, 
-  Play ,
+import {
+  Video,
+  Mic,
+  Share2,
+  Shield,
+  Zap,
+  Globe,
+  Play,
   Download
 } from "lucide-react";
 import { usePWAInstall } from "../components/usePWAInstall";
@@ -28,7 +28,7 @@ export function LandingPage() {
   return (
     <div className="min-h-screen bg-neutral-950 text-white selection:bg-blue-500/30">
       <Navbar />
-      
+
       <main>
         <HeroSection onGetStarted={handleGetStarted} />
         <FeaturesSection />
@@ -47,7 +47,7 @@ function Navbar() {
   const { isSignedIn } = useUser();
   const { isInstallable, installApp } = usePWAInstall();
   return (
-    <motion.nav 
+    <motion.nav
       initial={{ y: -20, opacity: 0 }}
       animate={{ y: 0, opacity: 1 }}
       transition={{ duration: 0.5 }}
@@ -66,26 +66,29 @@ function Navbar() {
           <a href="#how-it-works" className="hover:text-white transition">How it Works</a>
           <a href="#" className="hover:text-white transition">Pricing</a>
         </div>
-        
+
         <div className="flex items-center gap-4">
           {isInstallable && (
-          <button 
-            onClick={installApp}
-            className="hidden md:flex items-center gap-2 text-sm font-medium text-white/70 hover:text-white transition"
-          >
-            <Download className="w-4 h-4" />
-            Install App
-          </button>
-        )}
+            <button
+              onClick={installApp}
+              // Change "hidden md:flex" to "flex"
+              className="flex items-center gap-2 text-sm font-medium text-white/70 hover:text-white transition"
+            >
+              <Download className="w-4 h-4" />
+              {/* Optional: Hide text on mobile to save space, show icon only */}
+              <span className="hidden sm:inline">Install App</span>
+              {/* Or keep it simple: just "Install App" if you have space */}
+            </button>
+          )}
           {!isSignedIn && (
-            <button 
+            <button
               onClick={() => navigate("/signin")}
               className="text-sm font-medium text-white/70 hover:text-white transition"
             >
               Sign In
             </button>
           )}
-          <button 
+          <button
             onClick={() => navigate(isSignedIn ? "/dashboard" : "/signup")}
             className="bg-white text-black px-4 py-2 rounded-full text-sm font-bold hover:bg-neutral-200 transition"
           >
@@ -100,9 +103,9 @@ function Navbar() {
 function HeroSection({ onGetStarted }) {
   return (
     <section className="relative pt-32 pb-20 md:pt-48 md:pb-32 px-6 overflow-hidden">
-     
+
       <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-[500px] bg-blue-600/20 blur-[120px] rounded-full pointer-events-none" />
-      
+
       <div className="max-w-5xl mx-auto text-center relative z-10">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -116,12 +119,12 @@ function HeroSection({ onGetStarted }) {
             Your Remote Studio,<br /> Professional Quality.
           </h1>
           <p className="text-lg md:text-xl text-white/50 max-w-2xl mx-auto mb-10 leading-relaxed">
-            Record crystal-clear video and audio locally, independent of internet quality. 
+            Record crystal-clear video and audio locally, independent of internet quality.
             The modern alternative to Zoom for creators and professionals.
           </p>
-          
+
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-            <button 
+            <button
               onClick={onGetStarted}
               className="w-full sm:w-auto px-8 py-4 bg-blue-600 hover:bg-blue-500 rounded-xl text-white font-bold text-lg transition shadow-lg shadow-blue-600/25"
             >
@@ -133,7 +136,7 @@ function HeroSection({ onGetStarted }) {
           </div>
         </motion.div>
 
-        <motion.div 
+        <motion.div
           initial={{ opacity: 0, y: 40 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, delay: 0.2 }}
@@ -142,20 +145,20 @@ function HeroSection({ onGetStarted }) {
           <div className="absolute -inset-1 bg-gradient-to-b from-blue-500/20 to-transparent rounded-2xl blur-lg" />
           <div className="relative bg-neutral-900 border border-white/10 rounded-xl overflow-hidden shadow-2xl">
             <div className="h-8 bg-neutral-800 border-b border-white/5 flex items-center gap-2 px-4">
-               <div className="w-3 h-3 rounded-full bg-red-500/20" />
-               <div className="w-3 h-3 rounded-full bg-yellow-500/20" />
-               <div className="w-3 h-3 rounded-full bg-green-500/20" />
+              <div className="w-3 h-3 rounded-full bg-red-500/20" />
+              <div className="w-3 h-3 rounded-full bg-yellow-500/20" />
+              <div className="w-3 h-3 rounded-full bg-green-500/20" />
             </div>
             <div className="aspect-[16/9] bg-neutral-950 relative flex items-center justify-center group cursor-default">
-               <div className="grid grid-cols-2 gap-4 p-8 w-full h-full opacity-50 group-hover:opacity-100 transition duration-700">
-                  <div className="bg-neutral-800 rounded-lg animate-pulse" />
-                  <div className="bg-neutral-800 rounded-lg animate-pulse delay-75" />
-               </div>
-               <div className="absolute inset-0 flex items-center justify-center">
-                  <span className="bg-black/50 backdrop-blur border border-white/10 px-6 py-3 rounded-full text-sm font-medium">
-                    High Fidelity Local Recording
-                  </span>
-               </div>
+              <div className="grid grid-cols-2 gap-4 p-8 w-full h-full opacity-50 group-hover:opacity-100 transition duration-700">
+                <div className="bg-neutral-800 rounded-lg animate-pulse" />
+                <div className="bg-neutral-800 rounded-lg animate-pulse delay-75" />
+              </div>
+              <div className="absolute inset-0 flex items-center justify-center">
+                <span className="bg-black/50 backdrop-blur border border-white/10 px-6 py-3 rounded-full text-sm font-medium">
+                  High Fidelity Local Recording
+                </span>
+              </div>
             </div>
           </div>
         </motion.div>
@@ -210,7 +213,7 @@ function FeaturesSection() {
 
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
           {features.map((f, i) => (
-            <motion.div 
+            <motion.div
               key={i}
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
@@ -249,10 +252,10 @@ function HowItWorksSection() {
             <p className="text-white/50 text-lg mb-8">
               Forget complicated software setups. WeMeet handles the technical heavy lifting so you can focus on the conversation.
             </p>
-            
+
             <div className="space-y-6">
               {steps.map((step, i) => (
-                <motion.div 
+                <motion.div
                   key={i}
                   initial={{ opacity: 0, x: -20 }}
                   whileInView={{ opacity: 1, x: 0 }}
@@ -270,25 +273,25 @@ function HowItWorksSection() {
           </div>
 
           <div className="relative">
-             <div className="absolute inset-0 bg-blue-600/20 blur-[80px] rounded-full pointer-events-none" />
-             <div className="bg-neutral-900 border border-white/10 rounded-2xl p-6 relative z-10 rotate-3 hover:rotate-0 transition duration-500">
-                <div className="flex items-center justify-between mb-6">
-                   <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-full bg-gray-700" />
-                      <div>
-                        <div className="h-2 w-24 bg-gray-700 rounded mb-1" />
-                        <div className="h-2 w-16 bg-gray-800 rounded" />
-                      </div>
-                   </div>
-                   <div className="px-3 py-1 bg-red-500/20 text-red-400 rounded-full text-xs font-bold animate-pulse">
-                      REC 00:12:43
-                   </div>
+            <div className="absolute inset-0 bg-blue-600/20 blur-[80px] rounded-full pointer-events-none" />
+            <div className="bg-neutral-900 border border-white/10 rounded-2xl p-6 relative z-10 rotate-3 hover:rotate-0 transition duration-500">
+              <div className="flex items-center justify-between mb-6">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-full bg-gray-700" />
+                  <div>
+                    <div className="h-2 w-24 bg-gray-700 rounded mb-1" />
+                    <div className="h-2 w-16 bg-gray-800 rounded" />
+                  </div>
                 </div>
-                <div className="space-y-3">
-                   <div className="h-32 w-full bg-neutral-800 rounded-lg" />
-                   <div className="h-32 w-full bg-neutral-800 rounded-lg" />
+                <div className="px-3 py-1 bg-red-500/20 text-red-400 rounded-full text-xs font-bold animate-pulse">
+                  REC 00:12:43
                 </div>
-             </div>
+              </div>
+              <div className="space-y-3">
+                <div className="h-32 w-full bg-neutral-800 rounded-lg" />
+                <div className="h-32 w-full bg-neutral-800 rounded-lg" />
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -301,13 +304,13 @@ function CTASection({ onGetStarted }) {
     <section className="py-32 px-6">
       <div className="max-w-4xl mx-auto text-center bg-gradient-to-b from-blue-900/20 to-neutral-900 border border-blue-500/20 rounded-3xl p-12 relative overflow-hidden">
         <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-blue-500 to-transparent opacity-50" />
-        
+
         <h2 className="text-3xl md:text-5xl font-bold mb-6">Ready to upgrade your content?</h2>
         <p className="text-white/50 text-lg mb-10 max-w-xl mx-auto">
           Join thousands of creators capturing studio-quality video from their browser. No credit card required.
         </p>
-        
-        <button 
+
+        <button
           onClick={onGetStarted}
           className="px-10 py-4 bg-white text-black hover:bg-neutral-200 rounded-full font-bold text-lg transition transform hover:scale-105"
         >
@@ -324,16 +327,16 @@ function Footer() {
       <div className="max-w-7xl mx-auto px-6 grid md:grid-cols-4 gap-8 text-sm">
         <div className="col-span-2">
           <div className="flex items-center gap-2 mb-4">
-             <div className="w-6 h-6 bg-blue-600 rounded flex items-center justify-center">
-               <Video className="w-3 h-3 text-white" />
-             </div>
-             <span className="font-bold text-lg">WeMeet</span>
+            <div className="w-6 h-6 bg-blue-600 rounded flex items-center justify-center">
+              <Video className="w-3 h-3 text-white" />
+            </div>
+            <span className="font-bold text-lg">WeMeet</span>
           </div>
           <p className="text-white/40 max-w-xs">
             The professional remote recording studio in your browser. Record locally, edit globally.
           </p>
         </div>
-        
+
         <div>
           <h4 className="font-bold mb-4">Product</h4>
           <ul className="space-y-2 text-white/50">
@@ -342,7 +345,7 @@ function Footer() {
             <li><a href="#" className="hover:text-white transition">Showcase</a></li>
           </ul>
         </div>
-        
+
         <div>
           <h4 className="font-bold mb-4">Company</h4>
           <ul className="space-y-2 text-white/50">
