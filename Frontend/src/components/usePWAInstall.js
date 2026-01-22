@@ -1,0 +1,38 @@
+import { useState, useEffect } from "react";
+
+export function usePWAInstall() {
+  const [deferredPrompt, setDeferredPrompt] = useState(null);
+
+  useEffect(() => {
+    const handler = (e) => {
+      // Prevent the mini-infobar from appearing on mobile
+      e.preventDefault();
+      // Stash the event so it can be triggered later.
+      setDeferredPrompt(e);
+    };
+
+    window.addEventListener("beforeinstallprompt", handler);
+
+    return () => window.removeEventListener("beforeinstallprompt", handler);
+  }, []);
+
+  const installApp = async () => {
+    if (!deferredPrompt) return;
+    
+    // Show the install prompt
+    deferredPrompt.prompt();
+    
+    // Wait for the user to respond to the prompt
+    const { outcome } = await deferredPrompt.userChoice;
+    
+    // If accepted, clear the prompt (it can only be used once)
+    if (outcome === 'accepted') {
+      setDeferredPrompt(null);
+    }
+  };
+
+  return { 
+    isInstallable: !!deferredPrompt, 
+    installApp 
+  };
+}

@@ -1,18 +1,40 @@
 import { useNavigate, useLocation } from "react-router-dom";
 import { useClerk } from "@clerk/clerk-react";
-import { 
-  LayoutDashboard, 
-  Video, 
-  CassetteTape, 
-  Settings, 
-  LogOut, 
-  Video as VideoIcon 
+import {
+  LayoutDashboard,
+  Video,
+  CassetteTape,
+  Settings,
+  LogOut,
+  Video as VideoIcon,
+  Download
 } from "lucide-react";
+import { useEffect, useState } from "react";
 
 export function Sidebar() {
   const navigate = useNavigate();
   const location = useLocation();
   const { signOut } = useClerk();
+  const [deferredPrompt, setDeferredPrompt] = useState(null);
+
+  useEffect(() => {
+    const handler = (e) => {
+      e.preventDefault();
+      setDeferredPrompt(e);
+    };
+
+    window.addEventListener("beforeinstallprompt", handler);
+
+    // ✅ FIX 1: Cleanup listener to prevent memory leaks
+    return () => window.removeEventListener("beforeinstallprompt", handler);
+  }, []);
+
+  const handleInstall = async () => {
+    if (!deferredPrompt) return;
+    deferredPrompt.prompt();
+    const { outcome } = await deferredPrompt.userChoice;
+    if (outcome === 'accepted') setDeferredPrompt(null);
+  };
 
   const items = [
     { label: "Dashboard", path: "/dashboard", icon: <LayoutDashboard className="w-5 h-5" /> },
@@ -23,14 +45,15 @@ export function Sidebar() {
 
   return (
     <>
+      {/* --- DESKTOP SIDEBAR --- */}
       <aside className="hidden md:flex w-64 border-r border-white/10 bg-neutral-950 flex-col h-full sticky top-0">
-        
-        <div 
+
+        <div
           onClick={() => navigate("/dashboard")}
           className="h-16 flex items-center gap-3 px-6 border-b border-white/5 cursor-pointer hover:bg-white/5 transition"
         >
           <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center shadow-lg shadow-blue-600/20">
-              <VideoIcon className="w-5 h-5 text-white" />
+            <VideoIcon className="w-5 h-5 text-white" />
           </div>
           <span className="font-bold text-lg tracking-tight text-white">WeMeet</span>
         </div>
@@ -47,7 +70,18 @@ export function Sidebar() {
           ))}
         </nav>
 
-        <div className="p-4 border-t border-white/5">
+        <div className="p-4 border-t border-white/5 space-y-2">
+          {/* ✅ FIX 2: Better styling for Desktop Install Button */}
+          {deferredPrompt && (
+            <button
+              onClick={handleInstall}
+              className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium bg-blue-600 text-white hover:bg-blue-500 transition shadow-lg shadow-blue-900/20 mb-2"
+            >
+              <Download className="w-5 h-5" />
+              Install App
+            </button>
+          )}
+          
           <button
             onClick={async () => {
               await signOut();
@@ -61,7 +95,7 @@ export function Sidebar() {
         </div>
       </aside>
 
-
+      {/* --- MOBILE BOTTOM NAV --- */}
       <div className="md:hidden fixed bottom-0 left-0 right-0 bg-neutral-900/90 backdrop-blur-lg border-t border-white/10 z-50 pb-safe-area">
         <nav className="flex justify-around items-center h-16 px-2">
           {items.map((item) => (
@@ -73,33 +107,42 @@ export function Sidebar() {
               onClick={() => navigate(item.path)}
             />
           ))}
-          
-          <button
-            onClick={async () => {
-              await signOut();
-              navigate("/");
-            }}
-            className="flex flex-col items-center justify-center w-16 h-full text-red-400/70 hover:text-red-400"
-          >
-            <LogOut className="w-5 h-5" />
-            <span className="text-[10px] mt-1 font-medium">Exit</span>
-          </button>
+
+          {/* ✅ FIX 3: Added Install Button to Mobile View */}
+          {deferredPrompt ? (
+            <button
+              onClick={handleInstall}
+              className="flex flex-col items-center justify-center w-16 h-full text-blue-500 hover:text-blue-400"
+            >
+              <Download className="w-5 h-5" />
+              <span className="text-[10px] mt-1 font-medium">Install</span>
+            </button>
+          ) : (
+            <button
+              onClick={async () => {
+                await signOut();
+                navigate("/");
+              }}
+              className="flex flex-col items-center justify-center w-16 h-full text-red-400/70 hover:text-red-400"
+            >
+              <LogOut className="w-5 h-5" />
+              <span className="text-[10px] mt-1 font-medium">Exit</span>
+            </button>
+          )}
         </nav>
       </div>
     </>
   );
 }
 
-
 function DesktopNavItem({ label, icon, active, onClick }) {
   return (
     <div
       onClick={onClick}
-      className={`flex items-center gap-3 px-3 py-2.5 rounded-lg cursor-pointer transition text-sm font-medium ${
-        active
+      className={`flex items-center gap-3 px-3 py-2.5 rounded-lg cursor-pointer transition text-sm font-medium ${active
           ? "bg-blue-600 text-white shadow-md shadow-blue-900/20"
           : "text-white/60 hover:bg-white/5 hover:text-white"
-      }`}
+        }`}
     >
       <span className={active ? "text-white" : "text-white/50 group-hover:text-white"}>
         {icon}
@@ -113,11 +156,10 @@ function MobileNavItem({ label, icon, active, onClick }) {
   return (
     <div
       onClick={onClick}
-      className={`flex flex-col items-center justify-center w-16 h-full cursor-pointer transition ${
-        active
+      className={`flex flex-col items-center justify-center w-16 h-full cursor-pointer transition ${active
           ? "text-blue-500"
           : "text-white/40 hover:text-white/70"
-      }`}
+        }`}
     >
       <div className={active ? "text-blue-500" : "text-inherit"}>
         {icon}

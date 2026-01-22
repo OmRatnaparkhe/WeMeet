@@ -8,8 +8,10 @@ import {
   Shield, 
   Zap, 
   Globe, 
-  Play 
+  Play ,
+  Download
 } from "lucide-react";
+import { usePWAInstall } from "../components/usePWAInstall";
 
 export function LandingPage() {
   const navigate = useNavigate();
@@ -43,7 +45,7 @@ export function LandingPage() {
 function Navbar() {
   const navigate = useNavigate();
   const { isSignedIn } = useUser();
-
+  const { isInstallable, installApp } = usePWAInstall();
   return (
     <motion.nav 
       initial={{ y: -20, opacity: 0 }}
@@ -64,8 +66,17 @@ function Navbar() {
           <a href="#how-it-works" className="hover:text-white transition">How it Works</a>
           <a href="#" className="hover:text-white transition">Pricing</a>
         </div>
-
+        
         <div className="flex items-center gap-4">
+          {isInstallable && (
+          <button 
+            onClick={installApp}
+            className="hidden md:flex items-center gap-2 text-sm font-medium text-white/70 hover:text-white transition"
+          >
+            <Download className="w-4 h-4" />
+            Install App
+          </button>
+        )}
           {!isSignedIn && (
             <button 
               onClick={() => navigate("/signin")}
