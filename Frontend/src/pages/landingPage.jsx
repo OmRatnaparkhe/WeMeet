@@ -149,11 +149,12 @@ function HeroSection({ onGetStarted }) {
               <div className="w-3 h-3 rounded-full bg-yellow-500/20" />
               <div className="w-3 h-3 rounded-full bg-green-500/20" />
             </div>
-            <div className="aspect-[16/9] bg-neutral-950 relative flex items-center justify-center group cursor-default">
-              <div className="grid grid-cols-2 gap-4 p-8 w-full h-full opacity-50 group-hover:opacity-100 transition duration-700">
-                <div className="bg-neutral-800 rounded-lg animate-pulse" />
-                <div className="bg-neutral-800 rounded-lg animate-pulse delay-75" />
-              </div>
+            <div className="aspect-[16/9] bg-neutral-950 relative group cursor-default">
+              <img 
+                src="../FirstMeet.png" 
+                alt="Meeting recording interface" 
+                className="w-full h-full object-cover rounded-lg opacity-75 group-hover:opacity-100 transition duration-700"
+              />
               <div className="absolute inset-0 flex items-center justify-center">
                 <span className="bg-black/50 backdrop-blur border border-white/10 px-6 py-3 rounded-full text-sm font-medium">
                   High Fidelity Local Recording
@@ -277,7 +278,11 @@ function HowItWorksSection() {
             <div className="bg-neutral-900 border border-white/10 rounded-2xl p-6 relative z-10 rotate-3 hover:rotate-0 transition duration-500">
               <div className="flex items-center justify-between mb-6">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full bg-gray-700" />
+                  <img 
+                    src="" 
+                    alt="" 
+                    className="w-10 h-10 rounded-full object-cover"
+                  />
                   <div>
                     <div className="h-2 w-24 bg-gray-700 rounded mb-1" />
                     <div className="h-2 w-16 bg-gray-800 rounded" />
@@ -288,8 +293,16 @@ function HowItWorksSection() {
                 </div>
               </div>
               <div className="space-y-3">
-                <div className="h-32 w-full bg-neutral-800 rounded-lg" />
-                <div className="h-32 w-full bg-neutral-800 rounded-lg" />
+                <img 
+                  src="" 
+                  alt="" 
+                  className="h-32 w-full object-cover rounded-lg"
+                />
+                <img 
+                  src="" 
+                  alt="" 
+                  className="h-32 w-full object-cover rounded-lg"
+                />
               </div>
             </div>
           </div>
