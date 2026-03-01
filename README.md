@@ -6,19 +6,23 @@ This project focuses on real-time architecture, clean backend design, and scalab
 
 ---
 
-## 📸 Demo Screenshots
+## Demo Video
+Link - https://drive.google.com/file/d/1lhfu5QFLuOcEbgn_o4nvP0ZVlzoNBqmA/view?usp=drive_link
 
-> Add screenshots inside a `/screenshots` folder in your repo.
 
-### 🏠 Home / Lobby
-![Home Screenshot](./screenshots/home.png)
+## 📸 Screenshots
+
+### 🏠 Dashboard
+![Dashboard Screenshot](./screenshots/Dashboard.png)
+
+### 📹 Meetings tab
+![Meetings tab Screenshot](./screenshots/Meetingstab.png)
+
+### Create Meeting Modal
+![Create Meeting modal Screenshot](./screenshots/CreateMeetingModal.png)
 
 ### 📹 Video Call Interface
-![Call Screenshot](./screenshots/call.png)
-
-### 💬 In-Meeting Chat
-![Chat Screenshot](./screenshots/chat.png)
-
+![Video Call Screenshot](./screenshots/VideoCallInterface.png)
 ---
 
 ## 🚀 Features
@@ -127,3 +131,8 @@ Start frontend:
 ```bash
 npm run dev
 ```
+
+# 👨‍💻 Author
+Om Ratnaparkhe  
+Full Stack Developer   
+omratnaparkhe04@gmail.com
